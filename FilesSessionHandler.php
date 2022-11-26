@@ -78,9 +78,10 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_lock_file_name = "$session_save_path/$id.lock";
         // read MUST create file. Otherwise, strict mode will not work
 
-        // try to aquire lock for 300 seconds
+        // try to aquire lock for 30 seconds (max execution time)
         $handle = false;
-        for ($i = 0; $i < 3000; $i++) {
+        $max_time = ini_get("max_execution_time");
+        for ($i = 0; $i < $max_time * 10; $i++) {
             $handle = @fopen($session_lock_file_name, 'x');
             if ($handle !== false) {
                 break;
