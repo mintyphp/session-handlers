@@ -44,6 +44,12 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         // void parameter
         // NOTE: This function should unlock session data, if write() does not unlock it.
 
+        $session_save_path = $this->sessionSavePath;
+        $id = $this->sessionId;
+        $session_lock_file_name = "$session_save_path/$id.lock";
+        if (file_exists($session_lock_file_name)) {
+            unlink($session_lock_file_name);
+        }
         $this->sessionId = '';
 
         //$session_save_path = $this->sessionSavePath;
