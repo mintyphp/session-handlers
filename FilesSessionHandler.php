@@ -8,9 +8,8 @@ use SessionUpdateTimestampHandlerInterface;
 
 class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface
 {
-    private int $sessionIdSize;
-    private string $sessionSavePath;
-    private string $sessionId;
+    private string $sessionSavePath = '';
+    private string $sessionId = '';
 
     /*
      * == General Return Value Rule ==
@@ -27,14 +26,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
      * Collision detection is mandatory to reject attacker initialized session ID.
      * Coolision detection is absolute requirement for secure session.
      */
-
-    public function __construct($session_id_size = 16)
-    {
-        //echo "Create [{$session_id_size}]\n";
-        $this->sessionIdSize = $session_id_size;
-        $this->sessionSavePath = '';
-        $this->sessionId = '';
-    }
 
     /* Open session data database */
     public function open($save_path, $session_name): bool
@@ -82,12 +73,16 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         // read MUST create file. Otherwise, strict mode will not work
 
         // try to aquire lock for 300 seconds
-        for ($i = 0; $i < 30000; $i++) {
+        $handle = false;
+        for ($i = 0; $i < 3000; $i++) {
             $handle = @fopen($session_lock_file_name, 'x');
             if ($handle !== false) {
                 break;
             }
-            usleep(10 * 1000); // wait for 10 ms
+            usleep(100 * 1000); // wait for 100 ms
+        }
+        if ($handle === false) {
+            return false;
         }
         fclose($handle);
 
@@ -177,7 +172,7 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
 
         $session_save_path = $this->sessionSavePath;
         do {
-            $id = bin2hex(random_bytes(self::$sessionIdSize));
+            $id = bin2hex(random_bytes(16)); // 128 bit is recommended
             $session_file_name = "$session_save_path/$id";
         } while (file_exists($session_file_name));
         //echo "CreateID [{$id}]\n";
