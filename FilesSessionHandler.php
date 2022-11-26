@@ -33,7 +33,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         // string $save_path - Directory path, connection strings, etc. Default: session.save_path
         // string $session_name - Session ID cookie name. Default: session.name
         $this->sessionSavePath = $save_path;
-        //echo "Open [{$save_path},{$session_name}]\n";
         // MUST return bool. Return true for success.
         return true;
     }
@@ -52,10 +51,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         }
         $this->sessionId = '';
 
-        //$session_save_path = $this->sessionSavePath;
-        //$session_name = $this->sessionName;
-        //echo "Close [{$session_save_path},{$session_name}]\n";
-
         // MUST return bool. Return true for success.
         return true;
     }
@@ -64,7 +59,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
     public function read($id): string
     {
         if (!ctype_xdigit($id)) return '';
-        if ($this->sessionId && $this->sessionId != $id) return '';
 
         // string $id - Session ID string
         // NOTE: All production session save handler MUST implement "exclusive" lock.
@@ -73,12 +67,12 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
 
         $this->sessionId = $id;
         $session_save_path = $this->sessionSavePath;
-        //echo "Read [{$session_save_path},{$id}]\n";
-        $session_file_name = "$session_save_path/sess_$id";
-        $session_lock_file_name = "$session_save_path/sess_$id.lock";
 
         // We are creating lock files instead of using advisory locks (flock)
         // to support locks on distributed (file) systems.
+        $session_file_name = "$session_save_path/sess_$id";
+        $session_lock_file_name = "$session_save_path/sess_$id.lock";
+
         // Try to aquire lock for 30 seconds (max execution time).
         $handle = false;
         $max_time = ini_get("max_execution_time");
@@ -115,9 +109,9 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         //       is not suitable place your handler to unlock. Unlock data at close().
 
         $session_save_path = $this->sessionSavePath;
-        //echo "Write [{$session_save_path},{$id},{$session_data}]\n";
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
+        // We shouldn't write if we don't hold the lock.
         if (!file_exists($session_lock_file_name)) {
             return false;
         }
@@ -137,11 +131,14 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
 
         $this->sessionId = '';
         $session_save_path = $this->sessionSavePath;
-        //echo "Destroy [{$session_save_path},{$id}]\n";
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
-        unlink($session_file_name);
-        unlink($session_lock_file_name);
+        if (file_exists($session_file_name)) {
+            unlink($session_file_name);
+        }
+        if (file_exists($session_lock_file_name)) {
+            unlink($session_lock_file_name);
+        }
 
         // MUST return bool. Return true for success.
         // Return false only when there is error. i.e. Do not return false
@@ -189,7 +186,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
             $id = bin2hex(random_bytes(16)); // 128 bit is recommended
             $session_file_name = "$session_save_path/sess_$id";
         } while (file_exists($session_file_name));
-        //echo "CreateID [{$id}]\n";
 
         // MUST return session ID string.
         // Return false for error.
@@ -204,7 +200,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         // string $id - Session ID string
 
         $session_save_path = $this->sessionSavePath;
-        //echo "ValidateID [{$session_save_path},{$id}]\n";
         $session_file_name = "$session_save_path/sess_$id";
         $ret = file_exists($session_file_name);
 
@@ -228,9 +223,9 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         //       support time stamp updating, you must not define this.
 
         $session_save_path = $this->sessionSavePath;
-        //echo "UpdateTimestamp [{$session_save_path},{$id}]\n";
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
+        // We shouldn't update the timestamp if we don't hold the lock.
         if (!file_exists($session_lock_file_name)) {
             return false;
         }
