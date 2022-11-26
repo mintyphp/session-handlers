@@ -6,21 +6,16 @@ use MintyPHP\LoggingSessionHandler;
 include '../FilesSessionHandler.php';
 include '../LoggingSessionHandler.php';
 
+header('Content-Type: text/plain');
+
 session_set_save_handler(new LoggingSessionHandler(new FilesSessionHandler()), true);
 
-//session_set_save_handler(
-//    self::open,
-//    self::close,
-//    self::read,
-//    self::write,
-//    self::destroy,
-//    self::gc,
-//    self::create_sid,
-//    self::validate_sid,
-//    self::update_timestamp
-//);
-
-session_start(['use_strict_mode' => true, 'lazy_write' => true]);
-$_SESSION['user'] = 2;
-session_write_close();
-//session_regenerate_id(true);
+ob_start();
+var_dump('session_start');
+var_dump(session_start(['use_strict_mode' => true, 'lazy_write' => true]));
+$_SESSION['user'] = 1;
+var_dump('session_write_close');
+var_dump(session_write_close());
+//var_dump('session_regenerate_id');
+//var_dump(session_regenerate_id(true));
+ob_end_flush();
