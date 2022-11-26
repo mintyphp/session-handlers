@@ -6,11 +6,10 @@ use SessionHandlerInterface;
 use SessionIdInterface;
 use SessionUpdateTimestampHandlerInterface;
 
-class SessionHandler implements SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface
+class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface
 {
-    private string $sessionSavePath = 'data/sessions';
-    private int $sessionIdSize = 16;
-    //private string $sessionName;
+    private int $sessionIdSize;
+    private string $sessionSavePath;
     private string $sessionId;
 
     /*
@@ -29,14 +28,11 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
      * Coolision detection is absolute requirement for secure session.
      */
 
-    public function __construct($save_path)
+    public function __construct($session_id_size = 16)
     {
-        $save_path = realpath($save_path);
-        //echo "Create [{$save_path}]\n";
-        if (!file_exists($save_path)) {
-            mkdir($save_path, 0755, true);
-        }
-        $this->sessionSavePath = $save_path;
+        //echo "Create [{$session_id_size}]\n";
+        $this->sessionIdSize = $session_id_size;
+        $this->sessionSavePath = '';
         $this->sessionId = '';
     }
 
@@ -45,8 +41,7 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
     {
         // string $save_path - Directory path, connection strings, etc. Default: session.save_path
         // string $session_name - Session ID cookie name. Default: session.name
-        //$this->sessionSavePath = getcwd() . '/data/sessions';
-        //$this->sessionName = $session_name;
+        $this->sessionSavePath = $save_path;
         //echo "Open [{$save_path},{$session_name}]\n";
         // MUST return bool. Return true for success.
         return true;
@@ -82,14 +77,24 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
         $this->sessionId = $id;
         $session_save_path = $this->sessionSavePath;
         //echo "Read [{$session_save_path},{$id}]\n";
-        $session_file = "$session_save_path/$id";
+        $session_file_name = "$session_save_path/$id";
+        $session_lock_file_name = "$session_save_path/$id.lock";
         // read MUST create file. Otherwise, strict mode will not work
-        touch($session_file);
+
+        // try to aquire lock for 300 seconds
+        for ($i = 0; $i < 30000; $i++) {
+            $handle = @fopen($session_lock_file_name, 'x');
+            if ($handle !== false) {
+                break;
+            }
+            usleep(10 * 1000); // wait for 10 ms
+        }
+        fclose($handle);
 
         // MUST return STRING for successful read().
         // Return false only when there is error. i.e. Do not return false
         // for non-existing session data for the $id.
-        return (string) @file_get_contents($session_file);
+        return (string) @file_get_contents($session_file_name);
     }
 
     /* Write session data */
@@ -105,8 +110,10 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
 
         $session_save_path = $this->sessionSavePath;
         //echo "Write [{$session_save_path},{$id},{$session_data}]\n";
-        $session_file = "$session_save_path/$id";
-        $return = file_put_contents($session_file, $session_data, LOCK_EX);
+        $session_file_name = "$session_save_path/$id";
+        $session_lock_file_name = "$session_save_path/$id.lock";
+        $return = file_put_contents($session_file_name, $session_data, LOCK_EX);
+        unlink($session_lock_file_name);
         // MUST return bool. Return true for success.
         return $return === false ? false : true;
     }
@@ -122,8 +129,10 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
         $this->sessionId = '';
         $session_save_path = $this->sessionSavePath;
         //echo "Destroy [{$session_save_path},{$id}]\n";
-        $session_file = "$session_save_path/$id";
-        unlink($session_file);
+        $session_file_name = "$session_save_path/$id";
+        $session_lock_file_name = "$session_save_path/$id.lock";
+        unlink($session_file_name);
+        unlink($session_lock_file_name);
 
         // MUST return bool. Return true for success.
         // Return false only when there is error. i.e. Do not return false
@@ -166,7 +175,11 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
         //       must generate secure session ID by yourself.
         //       e.g. hash('sha2', random_bytes(64)) or use /dev/urandom
 
-        $id = bin2hex(random_bytes(self::$sessionIdSize));
+        $session_save_path = $this->sessionSavePath;
+        do {
+            $id = bin2hex(random_bytes(self::$sessionIdSize));
+            $session_file_name = "$session_save_path/$id";
+        } while (file_exists($session_file_name));
         //echo "CreateID [{$id}]\n";
 
         // MUST return session ID string.
@@ -183,8 +196,8 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
 
         $session_save_path = $this->sessionSavePath;
         //echo "ValidateID [{$session_save_path},{$id}]\n";
-        $session_file = "$session_save_path/$id";
-        $ret = file_exists($session_file);
+        $session_file_name = "$session_save_path/$id";
+        $ret = file_exists($session_file_name);
 
         // MUST return bool. Return true for collision.
         // NOTE: This handler is mandatory for session security.
@@ -207,8 +220,10 @@ class SessionHandler implements SessionHandlerInterface, SessionIdInterface, Ses
 
         $session_save_path = $this->sessionSavePath;
         //echo "UpdateTimestamp [{$session_save_path},{$id}]\n";
-        $session_file = "$session_save_path/$id";
-        $ret = touch($session_file);
+        $session_file_name = "$session_save_path/$id";
+        $session_lock_file_name = "$session_save_path/$id.lock";
+        $ret = touch($session_file_name);
+        unlink($session_lock_file_name);
 
         // MUST return bool. Return true for success.
         return $ret;
