@@ -71,6 +71,7 @@ foreach ($handlers as $handlerName) {
             $results = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
+                // parse response into headers and body
                 list($header, $logFile) = explode("\r\n\r\n", trim(file_get_contents("tmp/$port.client.log")), 2);
                 $headerLines = explode("\r\n", $header);
                 $headers = [];
@@ -79,12 +80,24 @@ foreach ($handlers as $handlerName) {
                     list($key, $value) = explode(': ', $headerLine);
                     $headers[$key] = $value;
                 }
-                $timestamp = $headers['X-Session-Flush-At'];
+                // detect session name and session id
                 if (isset($headers['Set-Cookie'])) {
                     $oldSessionId = $sessionId;
                     list($sessionName, $sessionId) = explode('=', explode(';', $headers['Set-Cookie'])[0]);
                 }
-                $results[$timestamp] = str_replace([$sessionId, $oldSessionId], ['{{current_random_session_id}}', '{{previous_random_session_id}}'], $logFile);
+                // replace random session ids
+                $replacements = [
+                    $sessionId => '{{current_random_session_id}}',
+                    $oldSessionId => '{{previous_random_session_id}}',
+                ];
+                $resultLogFile = str_replace(array_keys($replacements), array_values($replacements), $logFile);
+                // store with flush time as key (if available)
+                if (isset($headers['X-Session-Flush-At'])) {
+                    $timestamp = $headers['X-Session-Flush-At'];
+                    $results[$timestamp] = $resultLogFile;
+                } else {
+                    $results[] = $resultLogFile;
+                }
             }
             ksort($results);
             $responses = array_merge($responses, $results);
@@ -92,7 +105,7 @@ foreach ($handlers as $handlerName) {
         $newbody = implode("\n---\n", $responses);
         if (trim($body)) {
             if ($body != $newbody) {
-                echo "$testFile.$handlerName - FAILED\n";
+                echo "$testFile.$handlerName.out - FAILED\n";
                 file_put_contents("$testFile.$handlerName.out", "$head\n===\n$newbody");
             }
         } else {
