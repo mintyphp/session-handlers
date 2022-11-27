@@ -79,7 +79,7 @@ foreach ($handlers as $handlerName) {
             $responses = array_merge($responses, $results);
         }
         //diff here.
-        $body = implode("\n---\n", $responses);
+        $newbody = implode("\n---\n", $responses);
         if (!trim($body)) {
             file_put_contents($testFile, "$head\n===\n$newbody");
         }
