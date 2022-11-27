@@ -30,8 +30,8 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
     if (!preg_match('/^[a-z0-9_-]+$/', $fileName)) {
         die('invalid file name');
     }
-    if (file_exists("tests/$fileName.php")) {
-        include "tests/$fileName.php";
+    if (file_exists("tests/src/$fileName.php")) {
+        include "tests/src/$fileName.php";
     }
 
     ob_end_flush();
@@ -45,7 +45,7 @@ foreach ($handlers as $handlerName) {
         $port = 9000 + $j;
         $serverPids[] = trim(exec("php -S localhost:$port run-tests.php > /dev/null 2>&1 & echo \$!"));
     }
-    foreach (glob("tests/$handlerName/*.log") as $testFile) {
+    foreach (glob("tests/*.log") as $testFile) {
         $content = file_get_contents($testFile);
         list($head, $body) = explode("\n===\n", $content, 2);
         $paths = [];
@@ -65,7 +65,7 @@ foreach ($handlers as $handlerName) {
             $clientPids = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
-                $clientPids[] = trim(exec("curl -sS -b 'PHPSESSID=$sessionId' http://localhost:$port/$path -o tmp/$port.log & echo \$!"));
+                $clientPids[] = trim(exec("curl -sS -b 'PHPSESSID=$sessionId' http://localhost:$port/$handlerName/$path -o tmp/$port.log & echo \$!"));
             }
             exec("wait " . implode(' ', $clientPids));
             flush();
@@ -78,8 +78,11 @@ foreach ($handlers as $handlerName) {
             sort($results);
             $responses = array_merge($responses, $results);
         }
+        //diff here.
         $body = implode("\n---\n", $responses);
-        file_put_contents($testFile, "$head\n===\n$body");
+        if (!trim($body)) {
+            file_put_contents($testFile, "$head\n===\n$newbody");
+        }
     }
     foreach ($serverPids as $serverPid) {
         exec("kill $serverPid");
