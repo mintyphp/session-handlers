@@ -34,6 +34,10 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
         include "tests/src/$fileName.php";
     }
 
+    // get timestamp and content
+    list($msec, $sec) = explode(' ', microtime());
+    $timestamp = $sec . substr($msec, 2, 6);
+    header("X-Session-Flush-At: $timestamp");
     ob_end_flush();
 
     die();
@@ -43,7 +47,7 @@ foreach ($handlers as $handlerName) {
     $serverPids = [];
     for ($j = 0; $j < $parallel; $j++) {
         $port = 9000 + $j;
-        $serverPids[] = trim(exec("php -S localhost:$port run-tests.php > /dev/null 2>&1 & echo \$!"));
+        $serverPids[] = trim(exec("php -S localhost:$port run-tests.php > tmp/$port.server.log 2>&1 & echo \$!"));
     }
     foreach (glob("tests/*.log") as $testFile) {
         $content = file_get_contents($testFile);
@@ -53,34 +57,45 @@ foreach ($handlers as $handlerName) {
             list($count, $path) = explode(' ', $line);
             $paths[$path] = $count;
         }
-        $sessionId = bin2hex(random_bytes(16));
-        for ($j = 0; $j < $parallel; $j++) {
-            $port = 9000 + $j;
-            if (file_exists("tmp/$port.log")) {
-                unlink("tmp/$port.log");
-            }
-        }
+        $sessionName = '';
+        $sessionId = '';
         $responses = [];
         foreach ($paths as $path => $count) {
             $clientPids = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
-                $clientPids[] = trim(exec("curl -sS -b 'PHPSESSID=$sessionId' http://localhost:$port/$handlerName/$path -o tmp/$port.log & echo \$!"));
+                $clientPids[] = trim(exec("curl -i -sS -b '$sessionName=$sessionId' http://localhost:$port/$handlerName/$path -o tmp/$port.client.log & echo \$!"));
             }
             exec("wait " . implode(' ', $clientPids));
             flush();
             $results = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
-                $logFile = trim(file_get_contents("tmp/$port.log"));
-                $results[] = str_replace($sessionId, '**********[random sid]**********', $logFile);
+                list($header, $logFile) = explode("\r\n\r\n", trim(file_get_contents("tmp/$port.client.log")), 2);
+                $headerLines = explode("\r\n", $header);
+                $headers = [];
+                array_shift($headerLines);
+                foreach ($headerLines as $headerLine) {
+                    list($key, $value) = explode(': ', $headerLine);
+                    $headers[$key] = $value;
+                }
+                $timestamp = $headers['X-Session-Flush-At'];
+                if (isset($headers['Set-Cookie'])) {
+                    $oldSessionId = $sessionId;
+                    list($sessionName, $sessionId) = explode('=', explode(';', $headers['Set-Cookie'])[0]);
+                }
+                $results[$timestamp] = str_replace([$sessionId, $oldSessionId], ['{{current_random_session_id}}', '{{previous_random_session_id}}'], $logFile);
             }
-            sort($results);
+            ksort($results);
             $responses = array_merge($responses, $results);
         }
-        //diff here.
         $newbody = implode("\n---\n", $responses);
-        if (!trim($body)) {
+        if (trim($body)) {
+            if ($body != $newbody) {
+                echo "$testFile.$handlerName - FAILED\n";
+                file_put_contents("$testFile.$handlerName.out", "$head\n===\n$newbody");
+            }
+        } else {
             file_put_contents($testFile, "$head\n===\n$newbody");
         }
     }
