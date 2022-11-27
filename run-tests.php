@@ -7,7 +7,7 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
 
     header('Content-Type: text/plain');
 
-    $path = trim($_SERVER['REQUEST_URI'], '/');
+    $path = trim($_SERVER['QUERY_STRING'], '/');
     list($handlerName, $fileName) = explode('/', $path, 2);
 
     switch ($handlerName) {
@@ -47,7 +47,7 @@ foreach ($handlers as $handlerName) {
     $serverPids = [];
     for ($j = 0; $j < $parallel; $j++) {
         $port = 9000 + $j;
-        $serverPids[] = trim(exec("php -S localhost:$port run-tests.php > tmp/$port.server.log 2>&1 & echo \$!"));
+        $serverPids[] = trim(exec("php -S localhost:$port > tmp/$port.server.log 2>&1 & echo \$!"));
     }
     foreach (glob("tests/*.log") as $testFile) {
         $content = file_get_contents($testFile);
@@ -64,7 +64,7 @@ foreach ($handlers as $handlerName) {
             $clientPids = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
-                $clientPids[] = trim(exec("curl -i -sS -b '$sessionName=$sessionId' http://localhost:$port/$handlerName/$path -o tmp/$port.client.log & echo \$!"));
+                $clientPids[] = trim(exec("curl -i -sS -b '$sessionName=$sessionId' http://localhost:$port/run-tests.php?$handlerName/$path -o tmp/$port.client.log & echo \$!"));
             }
             exec("wait " . implode(' ', $clientPids));
             flush();
