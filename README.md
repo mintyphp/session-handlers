@@ -16,7 +16,7 @@ You need PHP 7.4 or higher to run the code.
 
 ## Using the handlers
 
-You can us the Memcache handler by adding these two lines to your PHP code:
+You can use the Memcache handler by adding these two lines to your PHP code:
 
     ini_set('session.save_path', 'tcp://localhost:11211');
     session_set_save_handler(new MemcacheSessionHandler(), true);
