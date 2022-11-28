@@ -13,5 +13,8 @@
         "psr-4": {
             "MintyPHP\\": "src/"
         }
+    },
+    "suggest": {
+        "ext-memcache": "Needed for session storage in Memcache in class MemcacheSessionHandler"
     }
 }

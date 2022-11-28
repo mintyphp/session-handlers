@@ -17,9 +17,9 @@ class LoggingSessionHandler implements SessionHandlerInterface, SessionIdInterfa
 
     public function __call($name, $arguments)
     {
-        $parameters = json_encode($arguments);
+        $parameters = json_encode($arguments, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $result = $this->sessionHandler->$name(...$arguments);
-        $return = json_encode($result);
+        $return = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         echo "$name $parameters = $return\n";
         return $result;
     }

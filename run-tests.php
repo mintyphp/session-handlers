@@ -1,6 +1,6 @@
 <?php
 chdir(__DIR__);
-$handlers = ['default', 'files'];
+$handlers = ['default', 'files', 'memcache'];
 $parallel = 10;
 // execute single test
 if ($_SERVER['SERVER_PORT'] ?? 0) {
@@ -11,6 +11,11 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
     list($handlerName, $fileName) = explode('/', $path, 2);
 
     switch ($handlerName) {
+        case 'memcache':
+            ini_set('session.save_path', 'tcp://localhost:11211');
+            include 'src/MemcacheSessionHandler.php';
+            $handler = new MintyPHP\MemcacheSessionHandler();
+            break;
         case 'files':
             include 'src/FilesSessionHandler.php';
             $handler = new MintyPHP\FilesSessionHandler();
@@ -24,6 +29,7 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
 
     include 'src/LoggingSessionHandler.php';
     session_set_save_handler(new MintyPHP\LoggingSessionHandler($handler), true);
+    header('X-Session-Save-Path: ' . ini_get('session.save_path'));
 
     ob_start();
 
@@ -90,6 +96,9 @@ foreach ($handlers as $handlerName) {
                     $sessionId => '{{current_random_session_id}}',
                     $oldSessionId => '{{previous_random_session_id}}',
                 ];
+                if (isset($headers['X-Session-Save-Path'])) {
+                    $replacements[$headers['X-Session-Save-Path']] = '{{current_session_save_path}}';
+                }
                 $resultLogFile = str_replace(array_keys($replacements), array_values($replacements), $logFile);
                 // store with flush time as key (if available)
                 if (isset($headers['X-Session-Flush-At'])) {
