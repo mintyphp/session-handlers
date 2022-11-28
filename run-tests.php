@@ -1,6 +1,7 @@
 <?php
 chdir(__DIR__);
 $handlers = ['default', 'files', 'memcache', 'redis'];
+$extensions = ['memcache', 'redis'];
 $parallel = 10;
 // execute single test
 if ($_SERVER['SERVER_PORT'] ?? 0) {
@@ -55,6 +56,10 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
 }
 // start test runner
 foreach ($handlers as $handlerName) {
+    // check extension
+    if (in_array($handlerName, $extensions) && !extension_loaded($handlerName)) {
+        continue;
+    }
     // start servers
     $serverPids = [];
     for ($j = 0; $j < $parallel; $j++) {
