@@ -4,6 +4,7 @@ namespace MintyPHP;
 
 use SessionHandlerInterface;
 use SessionIdInterface;
+use Memcache;
 
 class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterface
 {
@@ -18,7 +19,7 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         // string $session_name - Session ID cookie name. Default: session.name
 
         $url = parse_url($save_path);
-        $memcache = new \Memcache();
+        $memcache = new Memcache();
         $memcache->connect($url['host'], $url['port']);
 
         $this->sessionName = $session_name;
@@ -106,8 +107,10 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
             return false;
         }
         $session_timeout = ini_get('session.gc_maxlifetime');
+        $return = $this->memcache->set($session_key_name, $session_data, false, $session_timeout);
+        $this->memcache->delete($session_lock_key_name);
         // MUST return bool. Return true for success.
-        return $this->memcache->set($session_key_name, $session_data, false, $session_timeout);
+        return $return;
     }
 
     /* Remove specified session */

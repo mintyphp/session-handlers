@@ -1,6 +1,6 @@
 <?php
 chdir(__DIR__);
-$handlers = ['default', 'files', 'memcache'];
+$handlers = ['default', 'files', 'memcache', 'redis'];
 $parallel = 10;
 // execute single test
 if ($_SERVER['SERVER_PORT'] ?? 0) {
@@ -11,6 +11,11 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
     list($handlerName, $fileName) = explode('/', $path, 2);
 
     switch ($handlerName) {
+        case 'redis':
+            ini_set('session.save_path', 'tcp://localhost:6379');
+            include 'src/RedisSessionHandler.php';
+            $handler = new MintyPHP\RedisSessionHandler();
+            break;
         case 'memcache':
             ini_set('session.save_path', 'tcp://localhost:11211');
             include 'src/MemcacheSessionHandler.php';

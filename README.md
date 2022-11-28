@@ -4,6 +4,7 @@ A few PHP session save handlers that support locking and a test suite to prove t
 
 - FilesSessionHandler.php - a session handler that locks using ".lock" files instead of "flock" calls.
 - MemcacheSessionHandler.php - a session handler that stores it's session data in Memcache.
+- RedisSessionHandler.php - a session handler that stores it's session data in Redis.
 
 ## Requirements
 
