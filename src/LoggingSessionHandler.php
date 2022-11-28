@@ -18,7 +18,21 @@ class LoggingSessionHandler implements SessionHandlerInterface, SessionIdInterfa
     public function __call($name, $arguments)
     {
         $parameters = json_encode($arguments, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $result = $this->sessionHandler->$name(...$arguments);
+        if (method_exists($this->sessionHandler, $name)) {
+            $result = $this->sessionHandler->$name(...$arguments);
+        } else {
+            switch ($name) {
+                case 'create_sid': // from SessionIdInterface
+                    $result = bin2hex(random_bytes(16));
+                    break;
+                case 'updateTimestamp': // from SessionUpdateTimestampHandlerInterface
+                    $result = $this->sessionHandler->write(...$arguments);
+                    break;
+                default:
+                    $className = get_class($this->sessionHandler);
+                    throw new \Exception("The class '$className' is missing method '$name'");
+            }
+        }
         $return = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         echo "$name $parameters = $return\n";
         return $result;
