@@ -12,7 +12,11 @@ You can install the dependencies of this script using:
 
     sudo apt install php-cli curl
 
-You need PHP 7.4 or higher to run the code. 
+Optional dependencies can be installed using:
+
+    sudo apt install memcached php-memcache redis php-redis
+
+You need PHP 7.4 or higher to run the code.
 
 ## Using the handlers
 
