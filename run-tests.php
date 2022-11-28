@@ -97,7 +97,7 @@ foreach ($handlers as $handlerName) {
                     $oldSessionId => '{{previous_random_session_id}}',
                 ];
                 if (isset($headers['X-Session-Save-Path'])) {
-                    $replacements[$headers['X-Session-Save-Path']] = '{{current_session_save_path}}';
+                    $replacements[$headers['X-Session-Save-Path']] = '{{session_save_path}}';
                 }
                 $resultLogFile = str_replace(array_keys($replacements), array_values($replacements), $logFile);
                 // store with flush time as key (if available)
