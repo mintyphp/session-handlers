@@ -50,11 +50,21 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
 }
 // start test runner
 foreach ($handlers as $handlerName) {
+    // start servers
     $serverPids = [];
     for ($j = 0; $j < $parallel; $j++) {
         $port = 9000 + $j;
         $serverPids[] = trim(exec("php -S localhost:$port > tmp/$port.server.log 2>&1 & echo \$!"));
     }
+    // wait for ports
+    for ($j = 0; $j < $parallel; $j++) {
+        $port = 9000 + $j;
+        while (false === ($fp = @fsockopen('localhost', $port, $errCode, $errStr))) {
+            usleep(10 * 1000);
+        }
+        fclose($fp);
+    }
+    // execute scenarios
     foreach (glob("tests/*.log") as $testFile) {
         $content = file_get_contents($testFile);
         list($head, $body) = explode("\n===\n", $content, 2);
@@ -66,6 +76,7 @@ foreach ($handlers as $handlerName) {
         $sessionName = '';
         $sessionId = '';
         $responses = [];
+        // execute requests
         foreach ($paths as $path => $count) {
             $clientPids = [];
             for ($j = 0; $j < $count; $j++) {
@@ -111,6 +122,7 @@ foreach ($handlers as $handlerName) {
             ksort($results);
             $responses = array_merge($responses, $results);
         }
+        // compare and report
         $newbody = implode("\n---\n", $responses);
         if (trim($body)) {
             if ($body != $newbody) {
@@ -121,6 +133,7 @@ foreach ($handlers as $handlerName) {
             file_put_contents($testFile, "$head\n===\n$newbody");
         }
     }
+    // stop servers
     foreach ($serverPids as $serverPid) {
         exec("kill $serverPid");
     }
