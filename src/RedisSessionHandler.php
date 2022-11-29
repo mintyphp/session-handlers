@@ -67,12 +67,12 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         //Note: Predis has the session locking configurable in these ini settings:
         //; Should the locking be enabled? Defaults to: 0.
         //redis.session.locking_enabled = 1
-        //; How long should the lock live (in seconds)? Defaults to: value of max_execution_time.
+        //; How long should the lock live (in seconds)? Defaults to: value of max_execution_time (defaults to 30).
         //redis.session.lock_expire = 60
-        //; How long to wait between attempts to acquire lock, in microseconds (µs)?. Defaults to: 2000
-        //redis.session.lock_wait_time = 50000
-        //; Maximum number of times to retry (-1 means infinite). Defaults to: 10
-        //redis.session.lock_retries = 10
+        //; How long to wait between attempts to acquire lock, in microseconds (µs)?. Defaults to: 20000
+        //redis.session.lock_wait_time = 100000
+        //; Maximum number of times to retry (-1 means infinite). Defaults to: 100
+        //redis.session.lock_retries = 300
         
         // Try to aquire lock for 30 seconds (max execution time).
         $success = false;
