@@ -33,8 +33,17 @@ You can run the tests from the command line using:
 
     php run-tests.php
 
-The code will execute in about 1 second and test 12 HTTP calls in 3 save handlers. Use this for 100 runs:
+The code will execute in about 1 second and test 12 HTTP calls in 3 save handlers. The following output means that the tests succeeded:
 
-    for i in `seq 1 100`; do php run-tests.php; done
+    default   : OK
+    files     : OK
+    memcache  : OK
+    redis     : OK
 
-No output means that the tests succeeded.
+The word "FAILED" appears on a failed test and "SKIPPED" is shown when the PHP module is not loaded for either Redis or Memcache.
+
+Use this for 100 runs:
+
+    for i in `seq 1 100`; do php run-tests.php silent; done
+
+As shown, you may use the argument "silent" to suppress output on successful or skipped tests.

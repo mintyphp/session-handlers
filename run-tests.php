@@ -58,7 +58,9 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
 foreach ($handlers as $handlerName) {
     // check extension
     if (in_array($handlerName, $extensions) && !extension_loaded($handlerName)) {
-        echo sprintf("%-10s: SKIPPED\n", $handlerName);
+        if (($argv[1] ?? '') != 'silent') {
+            echo sprintf("%-10s: SKIPPED\n", $handlerName);
+        }
         continue;
     }
     // start servers
@@ -152,5 +154,7 @@ foreach ($handlers as $handlerName) {
     foreach ($serverPids as $serverPid) {
         exec("kill $serverPid");
     }
-    echo sprintf("%-10s: %s\n", $handlerName, $testsFailed ? 'FAILED' : 'OK');
+    if (($argv[1] ?? '') != 'silent') {
+        echo sprintf("%-10s: %s\n", $handlerName, $testsFailed ? 'FAILED' : 'OK');
+    }
 }
