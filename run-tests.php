@@ -58,6 +58,7 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
 foreach ($handlers as $handlerName) {
     // check extension
     if (in_array($handlerName, $extensions) && !extension_loaded($handlerName)) {
+        echo sprintf("%-10s: SKIPPED\n", $handlerName);
         continue;
     }
     // start servers
@@ -75,6 +76,8 @@ foreach ($handlers as $handlerName) {
         fclose($fp);
     }
     // execute scenarios
+    $testsFailed = 0;
+    $testsExecuted = 0;
     foreach (glob("tests/*.log") as $testFile) {
         $content = file_get_contents($testFile);
         list($head, $body) = explode("\n===\n", $content, 2);
@@ -138,13 +141,16 @@ foreach ($handlers as $handlerName) {
             if ($body != $newbody) {
                 echo "$testFile.$handlerName.out - FAILED\n";
                 file_put_contents("$testFile.$handlerName.out", "$head\n===\n$newbody");
+                $testsFailed += 1;
             }
         } else {
             file_put_contents($testFile, "$head\n===\n$newbody");
         }
+        $testsExecuted += 1;
     }
     // stop servers
     foreach ($serverPids as $serverPid) {
         exec("kill $serverPid");
     }
+    echo sprintf("%-10s: %s\n", $handlerName, $testsFailed ? 'FAILED' : 'OK');
 }
