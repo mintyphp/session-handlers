@@ -1,7 +1,13 @@
 <?php
 chdir(__DIR__);
-$handlers = ['default', 'files', 'memcache', 'redis'];
-$extensions = ['memcache', 'redis'];
+$handlers = [
+    'default' => [],
+    'files' => [],
+    'memcache' => ['memcache'],
+    'redis' => ['redis'],
+    'memcachedn' => ['memcached'],
+    'redisn' => ['redis'],
+];
 $parallel = 10;
 // execute single test
 if ($_SERVER['SERVER_PORT'] ?? 0) {
@@ -17,10 +23,20 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
             include 'src/RedisSessionHandler.php';
             $handler = new MintyPHP\RedisSessionHandler();
             break;
+        case 'redisn':
+            ini_set('session.save_path', 'tcp://localhost:6379');
+            include 'src/NativeRedisSessionHandler.php';
+            $handler = new MintyPHP\NativeRedisSessionHandler();
+            break;
         case 'memcache':
             ini_set('session.save_path', 'tcp://localhost:11211');
             include 'src/MemcacheSessionHandler.php';
             $handler = new MintyPHP\MemcacheSessionHandler();
+            break;
+        case 'memcachedn':
+            ini_set('session.save_path', 'localhost:11211');
+            include 'src/NativeMemcachedSessionHandler.php';
+            $handler = new MintyPHP\NativeMemcachedSessionHandler();
             break;
         case 'files':
             include 'src/FilesSessionHandler.php';
@@ -55,9 +71,15 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
     die();
 }
 // start test runner
-foreach ($handlers as $handlerName) {
+foreach ($handlers as $handlerName => $extensions) {
     // check extension
-    if (in_array($handlerName, $extensions) && !extension_loaded($handlerName)) {
+    $extensionsLoaded = true;
+    foreach ($extensions as $extension) {
+        if (!extension_loaded($extension)) {
+            $extensionsLoaded = false;
+        }
+    }
+    if (!$extensionsLoaded) {
         if (($argv[1] ?? '') != 'silent') {
             echo sprintf("%-10s: SKIPPED\n", $handlerName);
         }

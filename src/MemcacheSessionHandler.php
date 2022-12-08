@@ -65,13 +65,13 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
 
         // Try to aquire lock for 30 seconds (max execution time).
         $success = false;
-        $max_time = ini_get("max_execution_time");
+        $max_time = ini_get("max_execution_time") ?: 30;
         for ($i = 0; $i < $max_time * 10; $i++) {
             $success = $this->memcache->add($session_lock_key_name, '1', false, $max_time);
             if ($success) {
                 break;
             }
-            usleep(100 * 1000); // wait for 100 ms
+            usleep(20 * 1000); // wait for 20 ms
         }
         // return false if we could not aquire the lock
         if ($success === false) {

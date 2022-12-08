@@ -64,7 +64,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_key_name = "sess-$prefix-$id";
         $session_lock_key_name = "sess-$prefix-$id-lock";
 
-        //Note: Predis has the session locking configurable in these ini settings:
+        //Note: PhpRedis has the session locking configurable in these ini settings:
         //; Should the locking be enabled? Defaults to: 0.
         //redis.session.locking_enabled = 1
         //; How long should the lock live (in seconds)? Defaults to: value of max_execution_time (defaults to 30).
@@ -76,14 +76,14 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
 
         // Try to aquire lock for 30 seconds (max execution time).
         $success = false;
-        $max_time = ini_get("max_execution_time");
+        $max_time = ini_get("max_execution_time") ?: 30;
         for ($i = 0; $i < $max_time * 10; $i++) {
             $success = $this->redis->setNx($session_lock_key_name, '1');
             if ($success) {
                 $this->redis->expire($session_lock_key_name, $max_time);
                 break;
             }
-            usleep(100 * 1000); // wait for 100 ms
+            usleep(20 * 1000); // wait for 20 ms
         }
         // return false if we could not aquire the lock
         if ($success === false) {
