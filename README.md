@@ -10,7 +10,7 @@ This repository contains a set of PHP session save handlers that support locking
 
 You can install the dependencies of this script using:
 
-    sudo apt install php-cli curl
+    sudo apt install php-cli php-curl
 
 Optional dependencies can be installed using:
 
