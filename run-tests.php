@@ -8,7 +8,7 @@ $handlers = [
     'memcachedn' => ['memcached'],
     'redisn' => ['redis'],
 ];
-$parallel = 10;
+$parallel = 100;
 // execute single test
 if ($_SERVER['SERVER_PORT'] ?? 0) {
 

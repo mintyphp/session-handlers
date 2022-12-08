@@ -77,7 +77,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         // Try to aquire lock for 30 seconds (max execution time).
         $success = false;
         $max_time = ini_get("max_execution_time") ?: 30;
-        for ($i = 0; $i < $max_time * 10; $i++) {
+        for ($i = 0; $i < $max_time * 50; $i++) {
             $success = $this->redis->setNx($session_lock_key_name, '1');
             if ($success) {
                 $this->redis->expire($session_lock_key_name, $max_time);
