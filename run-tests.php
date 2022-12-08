@@ -88,17 +88,31 @@ foreach ($handlers as $handlerName) {
             list($count, $path) = explode(' ', $line);
             $paths[] = [$path, $count];
         }
+        $oldSessionId = '';
         $sessionName = '';
         $sessionId = '';
         $responses = [];
         // execute requests
         foreach ($paths as list($path, $count)) {
-            $clientPids = [];
+            $mh = curl_multi_init();
+            $chs = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
-                $clientPids[] = trim(exec("curl -i -sS -b '$sessionName=$sessionId' http://localhost:$port/run-tests.php?$handlerName/$path -o tmp/$port.client.log & echo \$!"));
+                $ch = curl_init("http://localhost:$port/run-tests.php?$handlerName/$path");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ["Cookie: $sessionName=$sessionId"]);
+                curl_setopt($ch, CURLOPT_HEADER, true);
+                curl_multi_add_handle($mh, $ch);
+                $chs[$j] = $ch;
             }
-            exec("wait " . implode(' ', $clientPids));
+            $running = null;
+            do {
+                curl_multi_exec($mh, $running);
+            } while ($running);
+            for ($j = 0; $j < $count; $j++) {
+                $port = 9000 + $j;
+                file_put_contents("tmp/$port.client.log", curl_multi_getcontent($chs[$j]));
+            }
             flush();
             $results = [];
             for ($j = 0; $j < $count; $j++) {
