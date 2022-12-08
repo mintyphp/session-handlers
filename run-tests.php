@@ -86,13 +86,13 @@ foreach ($handlers as $handlerName) {
         $paths = [];
         foreach (explode("\n", trim($head)) as $line) {
             list($count, $path) = explode(' ', $line);
-            $paths[$path] = $count;
+            $paths[] = [$path, $count];
         }
         $sessionName = '';
         $sessionId = '';
         $responses = [];
         // execute requests
-        foreach ($paths as $path => $count) {
+        foreach ($paths as list($path, $count)) {
             $clientPids = [];
             for ($j = 0; $j < $count; $j++) {
                 $port = 9000 + $j;
