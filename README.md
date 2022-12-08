@@ -42,6 +42,8 @@ The code will execute in about 1 second and test 12 HTTP calls in 3 save handler
 
 The word "FAILED" appears on a failed test and "SKIPPED" is shown when the PHP module is not loaded for either Redis or Memcache.
 
+## Stress testing
+
 Use this for 100 runs:
 
     for i in `seq 1 100`; do php run-tests.php silent; done
