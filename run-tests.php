@@ -88,7 +88,7 @@ foreach ($handlers as $strictMode => $strictModeHandlers) {
         }
         if (!$extensionsLoaded) {
             if (($argv[1] ?? '') != 'silent') {
-                echo sprintf("%-11s: SKIPPED\n", $handlerName);
+                echo sprintf("%-8s - %-11s: SKIPPED\n", $strictMode, $handlerName);
             }
             continue;
         }
@@ -198,7 +198,7 @@ foreach ($handlers as $strictMode => $strictModeHandlers) {
             exec("kill $serverPid");
         }
         if (($argv[1] ?? '') != 'silent') {
-            echo sprintf("%-11s: %s\n", $handlerName, $testsFailed ? 'FAILED' : 'OK');
+            echo sprintf("%-8s - %-11s: %s\n", $strictMode, $handlerName, $testsFailed ? 'FAILED' : 'OK');
         }
     }
 }
