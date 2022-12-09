@@ -62,3 +62,15 @@ Use this for 100 runs:
     for i in `seq 1 100`; do php run-tests.php silent; done
 
 As shown, you may use the argument "silent" to suppress output on successful or skipped tests.
+
+## Links to other locking handlers
+
+Below you find a few other implementations of locking Session handlers:
+
+- https://github.com/mevdschee/symfony-session-tests (Symfony "files")
+- https://github.com/stechstudio/laravel-raw-sessions (Laravel "files")
+- https://github.com/1ma/RedisSessionHandler (Redis)
+- https://github.com/colinmollenhour/php-redis-session-abstract (Redis)
+- https://github.com/kronostechnologies/redis-session-handler (Redis)
+
+Enjoy!
