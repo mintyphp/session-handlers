@@ -3,13 +3,15 @@
 This repository contains a set of PHP session save handlers that support locking. I also contains a test suite to prove that they do. Current handlers are:
 
 - **files**  
-  [FilesSessionHandler](src/FilesSessionHandler.php)  
-  Locks using ".lock" files instead of "flock" calls.
-- memcached: [MemcachedSessionHandler](src/MemcachedSessionHandler.php)
-  Locks using Memcache's atomic "add" operation.
-- redis: [RedisSessionHandler](src/RedisSessionHandler.php) - locks using Redis' atomic "setNx" operation.
-- memcachedn: [NativeMemcachedSessionHandler](src/NativeMemcachedSessionHandler.php) - uses the "memcached" session module (ext-memcached).
-- redisn: [NativeRedisSessionHandler](src/NativeRedisSessionHandler.php) - uses the "redis" session module (ext-redis).
+  [FilesSessionHandler](src/FilesSessionHandler.php) - Locks using ".lock" files instead of "flock" calls.
+- **memcached**  
+  [MemcachedSessionHandler](src/MemcachedSessionHandler.php) - Locks using Memcache's atomic "add" operation.
+- **redis**  
+  [RedisSessionHandler](src/RedisSessionHandler.php) - locks using Redis' atomic "setNx" operation.
+- **memcachedn**  
+  [NativeMemcachedSessionHandler](src/NativeMemcachedSessionHandler.php) - uses the "memcached" session module (ext-memcached).
+- **redisn**  
+  [NativeRedisSessionHandler](src/NativeRedisSessionHandler.php) - uses the "redis" session module (ext-redis).
 
 ## Requirements
 
