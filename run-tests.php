@@ -35,7 +35,7 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
             break;
         case 'memcachedn':
             ini_set('session.save_path', 'localhost:11211');
-            ini_set('memcached.sess_lock_wait_min', 20); // 20ms
+            ini_set('memcached.sess_lock_wait_min', 20); // 20ms (default = 150ms)
             include 'src/NativeMemcachedSessionHandler.php';
             $handler = new MintyPHP\NativeMemcachedSessionHandler();
             break;
