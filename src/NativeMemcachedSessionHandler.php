@@ -79,8 +79,8 @@ class NativeMemcachedSessionHandler extends \SessionHandler
 
         $prefix = "memc.sess.key.$sessionName.";
         $lock_expire = ini_get("max_execution_time") ?: 30; // 30s
-        $lock_wait_time = (ini_get('memcached.sess_lock_wait_min') ?: ini_get('memcached.sess_lock_wait')) ?: 20; // 20ms
-        $lock_retries = (int) ($lock_expire / ($lock_wait_time / 1000)); // 1500x
+        $lock_wait_time = ini_get('memcached.sess_lock_wait_min') ?: 150; // 150ms
+        $lock_retries = (int) ($lock_expire / ($lock_wait_time / 1000)); // 200x
 
         ini_set('memcached.sess_locking', 1);
         ini_set('memcached.sess_prefix', $prefix);
