@@ -81,7 +81,7 @@ foreach ($handlers as $handlerName => $extensions) {
     }
     if (!$extensionsLoaded) {
         if (($argv[1] ?? '') != 'silent') {
-            echo sprintf("%-10s: SKIPPED\n", $handlerName);
+            echo sprintf("%-11s: SKIPPED\n", $handlerName);
         }
         continue;
     }
@@ -191,6 +191,6 @@ foreach ($handlers as $handlerName => $extensions) {
         exec("kill $serverPid");
     }
     if (($argv[1] ?? '') != 'silent') {
-        echo sprintf("%-10s: %s\n", $handlerName, $testsFailed ? 'FAILED' : 'OK');
+        echo sprintf("%-11s: %s\n", $handlerName, $testsFailed ? 'FAILED' : 'OK');
     }
 }
