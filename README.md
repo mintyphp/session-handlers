@@ -2,7 +2,7 @@
 
 This repository contains a set of PHP session save handlers that support locking. I also contains a test suite to prove that they do. Current handlers are:
 
-- **files**
+- **files**  
   [FilesSessionHandler](src/FilesSessionHandler.php)  
   Locks using ".lock" files instead of "flock" calls.
 - memcached: [MemcachedSessionHandler](src/MemcachedSessionHandler.php)
