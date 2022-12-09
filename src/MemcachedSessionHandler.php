@@ -85,7 +85,7 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
         // read MUST create file. Otherwise, strict mode will not work
         $session_timeout = ini_get('session.gc_maxlifetime');
         $session_data = $this->memcached->get($session_key_name) ?: '';
-        $this->memcached->add($session_key_name, $session_data, $session_timeout);
+        $this->memcached->touch($session_key_name, $session_timeout);
 
         // MUST return STRING for successful read().
         // Return false only when there is error. i.e. Do not return false
