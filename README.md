@@ -29,8 +29,7 @@ You need PHP 7.4 or higher to run the code.
 
 This package is on [Packagist](https://packagist.org/packages/mintyphp/session-handlers) and can be installed using [Composer](https://getcomposer.org/download/), using:
 
-    wget https://getcomposer.org/composer.phar
-    php composer.phar require mintyphp/session-handlers
+    composer require mintyphp/session-handlers
 
 You can use the Redis handler by adding these two lines to your PHP code:
 
