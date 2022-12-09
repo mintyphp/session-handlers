@@ -1,6 +1,6 @@
 # MintyPHP session save handlers
 
-This repository contains a set of PHP session save handlers that support locking. I also contains a test suite to prove that they do. Current handlers are:
+This repository contains a set of PHP session save handlers that support locking. I also contains a test suite to prove that they do. Current handlers that can be tested (and their corresponding test mode) are:
 
 - **standard**
   - **default** ([SessionHandler](https://www.php.net/manual/en/class.sessionhandler.php))  
