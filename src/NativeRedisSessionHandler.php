@@ -49,10 +49,10 @@ class NativeRedisSessionHandler extends \SessionHandler
         //
 
         if (null === $savePath) {
-            $savePath = \ini_get('session.save_path');
+            $savePath = ini_get('session.save_path');
         }
         if (null === $sessionName) {
-            $sessionName = \ini_get('session.name');
+            $sessionName = ini_get('session.name');
         }
 
         $query = parse_url($savePath, PHP_URL_QUERY);

@@ -33,7 +33,7 @@ class NativeMemcachedSessionHandler extends \SessionHandler
         //
 
         if (null === $savePath) {
-            $savePath = \ini_get('session.save_path');
+            $savePath = ini_get('session.save_path');
         }
 
         ini_set('session.save_path', $savePath);
@@ -74,7 +74,7 @@ class NativeMemcachedSessionHandler extends \SessionHandler
         //
 
         if (null === $sessionName) {
-            $sessionName = \ini_get('session.name');
+            $sessionName = ini_get('session.name');
         }
 
         $prefix = "memc.sess.key.$sessionName.";
