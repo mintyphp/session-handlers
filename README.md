@@ -17,7 +17,7 @@ This repository contains a set of PHP session save handlers that support locking
   - **redis** ([RedisSessionHandler](src/RedisSessionHandler.php))  
     Locks using Redis' atomic "setNx" operation.
 
-Note that the standard mode testable handlers are implement strict mode as well, but can't be tested as strict handlers.
+Note that the standard mode testable handlers implement strict mode as well, but can't be tested as strict handlers.
 
 ## Requirements
 
