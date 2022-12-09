@@ -1,0 +1,33 @@
+1 start_and_write
+1 start_and_write
+1 start_readonly
+1 start_and_regenerate
+===
+open ["{{session_save_path}}","PHPSESSID"] = true
+create_sid [] = "{{current_random_session_id}}"
+read ["{{current_random_session_id}}"] = ""
+write ["{{current_random_session_id}}","user|i:1;"] = true
+close [] = true
+---
+open ["{{session_save_path}}","PHPSESSID"] = true
+validateId ["{{current_random_session_id}}"] = true
+read ["{{current_random_session_id}}"] = "user|i:1;"
+updateTimestamp ["{{current_random_session_id}}","user|i:1;"] = true
+close [] = true
+---
+open ["{{session_save_path}}","PHPSESSID"] = true
+validateId ["{{current_random_session_id}}"] = true
+read ["{{current_random_session_id}}"] = "user|i:1;"
+close [] = true
+---
+open ["{{session_save_path}}","PHPSESSID"] = true
+validateId ["{{previous_random_session_id}}"] = true
+read ["{{previous_random_session_id}}"] = "user|i:1;"
+destroy ["{{previous_random_session_id}}"] = true
+close [] = true
+open ["{{session_save_path}}","PHPSESSID"] = true
+create_sid [] = "{{current_random_session_id}}"
+validateId ["{{current_random_session_id}}"] = false
+read ["{{current_random_session_id}}"] = ""
+write ["{{current_random_session_id}}","user|i:1;"] = true
+close [] = true

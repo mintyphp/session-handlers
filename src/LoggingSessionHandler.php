@@ -21,7 +21,6 @@ class LoggingSessionHandler implements SessionHandlerInterface, SessionIdInterfa
         if (method_exists($this->sessionHandler, $name)) {
             $result = $this->sessionHandler->$name(...$arguments);
         } else {
-            $className = get_class($this->sessionHandler);
             switch ($name) {
                 case 'create_sid': // from SessionIdInterface
                     $result = bin2hex(random_bytes(16));
@@ -30,6 +29,7 @@ class LoggingSessionHandler implements SessionHandlerInterface, SessionIdInterfa
                     $result = $this->sessionHandler->write(...$arguments);
                     break;
                 default:
+                    $className = get_class($this->sessionHandler);
                     throw new \Exception("The class '$className' is missing method '$name'");
             }
         }
