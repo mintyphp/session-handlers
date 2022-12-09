@@ -15,7 +15,7 @@
         }
     },
     "suggest": {
-        "ext-memcache": "Needed for session storage in Memcache in class MemcacheSessionHandler",
+        "ext-memcached": "Needed for session storage in Memcache in class MemcacheSessionHandler",
         "ext-redis": "Needed for session storage in Redis in class RedisSessionHandler"
     }
 }
