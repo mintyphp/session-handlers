@@ -34,6 +34,7 @@ This package is on [Packagist](https://packagist.org/packages/mintyphp/session-h
 You can use the Redis handler by adding these two lines to your PHP code:
 
     ini_set('session.save_path', 'tcp://localhost:6379');
+    ini_set('session.use_strict_mode', true);
     session_set_save_handler(new RedisSessionHandler(), true);
 
 Note that these lines must be executed before the "session_start()" call.
