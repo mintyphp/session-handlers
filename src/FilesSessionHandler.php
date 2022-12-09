@@ -10,6 +10,7 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
 {
     private string $sessionSavePath = '';
     private string $sessionId = '';
+    private bool $isLocked = false;
 
     /*
      * == General Return Value Rule ==
@@ -46,8 +47,8 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_save_path = $this->sessionSavePath;
         $id = $this->sessionId;
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
-        if (file_exists($session_lock_file_name)) {
-            rmdir($session_lock_file_name);
+        if ($this->isLocked) {
+            @unlink($session_lock_file_name);
         }
         $this->sessionId = '';
 
@@ -77,16 +78,18 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $handle = false;
         $max_time = ini_get("max_execution_time") ?: 30;
         for ($i = 0; $i < $max_time * 50; $i++) {
-            if (@mkdir($session_lock_file_name)) {
-                $handle = true;
+            $handle = @fopen($session_lock_file_name, 'x');
+            if ($handle !== false) {
                 break;
             }
             usleep(20 * 1000); // wait for 20 ms
         }
+        fclose($handle);
         // return false if we could not aquire the lock
         if ($handle === false) {
             return false;
         }
+        $this->isLocked = true;
         // read MUST create file. Otherwise, strict mode will not work
         touch($session_file_name);
 
@@ -111,7 +114,8 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
         $return = file_put_contents($session_file_name, $session_data, LOCK_EX);
-        rmdir($session_lock_file_name);
+        @unlink($session_lock_file_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         return $return === false ? false : true;
     }
@@ -128,12 +132,9 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_save_path = $this->sessionSavePath;
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
-        if (file_exists($session_file_name)) {
-            unlink($session_file_name);
-        }
-        if (file_exists($session_lock_file_name)) {
-            rmdir($session_lock_file_name);
-        }
+        @unlink($session_file_name);
+        @unlink($session_lock_file_name);
+        $this->isLocked = false;
 
         // MUST return bool. Return true for success.
         // Return false only when there is error. i.e. Do not return false
@@ -225,7 +226,8 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
             return false;
         }
         $ret = touch($session_file_name);
-        rmdir($session_lock_file_name);
+        @unlink($session_lock_file_name);
+        $this->isLocked = false;
 
         // MUST return bool. Return true for success.
         return $ret;

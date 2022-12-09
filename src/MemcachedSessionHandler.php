@@ -11,6 +11,7 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
     private string $sessionName = '';
     private string $sessionId = '';
     private $memcached = null;
+    private bool $isLocked = false;
 
     /* Open session data database */
     public function open($save_path, $session_name): bool
@@ -39,7 +40,9 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
         $id = $this->sessionId;
         $session_lock_key_name = "sess-$prefix-$id-lock";
 
-        $this->memcached->delete($session_lock_key_name);
+        if ($this->isLocked) {
+            $this->memcached->delete($session_lock_key_name);
+        }
         $this->sessionId = '';
 
         // MUST return bool. Return true for success.
@@ -76,13 +79,13 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
         }
         // return false if we could not aquire the lock
         if ($success === false) {
-            var_dump($success);
             return false;
         }
+        $this->isLocked = true;
         // read MUST create file. Otherwise, strict mode will not work
         $session_timeout = ini_get('session.gc_maxlifetime');
         $session_data = $this->memcached->get($session_key_name) ?: '';
-        $this->memcached->set($session_key_name, $session_data, $session_timeout);
+        $this->memcached->add($session_key_name, $session_data, $session_timeout);
 
         // MUST return STRING for successful read().
         // Return false only when there is error. i.e. Do not return false
@@ -103,10 +106,11 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
 
         $prefix = $this->sessionName;
         $session_key_name = "sess-$prefix-$id";
-        //$session_lock_key_name = "sess-$prefix-$id-lock";
+        $session_lock_key_name = "sess-$prefix-$id-lock";
         $session_timeout = ini_get('session.gc_maxlifetime');
         $return = $this->memcached->set($session_key_name, $session_data, $session_timeout);
-        //$this->memcached->delete($session_lock_key_name);
+        $this->memcached->delete($session_lock_key_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         return $return;
     }
@@ -125,6 +129,7 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
         $session_lock_key_name = "sess-$prefix-$id-lock";
         $this->memcached->delete($session_key_name);
         $this->memcached->delete($session_lock_key_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         // Return false only when there is error. i.e. Do not return false
         // for non-existing session data for the $id.
@@ -199,6 +204,7 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
         $session_timeout = ini_get('session.gc_maxlifetime');
         $return = $this->memcached->touch($session_key_name, $session_timeout);
         $this->memcached->delete($session_lock_key_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         return $return;
     }

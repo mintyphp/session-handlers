@@ -12,6 +12,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
     private string $sessionName = '';
     private string $sessionId = '';
     private $redis = null;
+    private bool $isLocked = false;
 
     /* Open session data database */
     public function open($save_path, $session_name): bool
@@ -39,7 +40,9 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $prefix = $this->sessionName;
         $id = $this->sessionId;
         $session_lock_key_name = "sess-$prefix-$id-lock";
-        $this->redis->del($session_lock_key_name);
+        if ($this->isLocked) {
+            $this->redis->del($session_lock_key_name);
+        }
         $this->sessionId = '';
 
         // MUST return bool. Return true for success.
@@ -89,6 +92,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         if ($success === false) {
             return false;
         }
+        $this->isLocked = true;
         // read MUST create file. Otherwise, strict mode will not work
         $session_timeout = ini_get('session.gc_maxlifetime');
         $session_data = $this->redis->get($session_key_name) ?: '';
@@ -105,6 +109,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
     {
         if (!ctype_xdigit($id)) return false;
         if (!$id || $this->sessionId != $id) return false;
+        if (!$id || $this->sessionId != $id) return false;
 
         // string $id - Session ID string
         // string $session_data - Session data string serialized by session serializer.
@@ -113,11 +118,12 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
 
         $prefix = $this->sessionName;
         $session_key_name = "sess-$prefix-$id";
-        //$session_lock_key_name = "sess-$prefix-$id-lock";
+        $session_lock_key_name = "sess-$prefix-$id-lock";
         $session_timeout = ini_get('session.gc_maxlifetime');
         $return = $this->redis->set($session_key_name, $session_data);
         $this->redis->expire($session_key_name, $session_timeout);
-        //$this->redis->delete($session_lock_key_name);
+        $this->redis->del($session_lock_key_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         return $return;
     }
@@ -136,6 +142,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_lock_key_name = "sess-$prefix-$id-lock";
         $this->redis->del($session_key_name);
         $this->redis->del($session_lock_key_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         // Return false only when there is error. i.e. Do not return false
         // for non-existing session data for the $id.
@@ -210,6 +217,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_timeout = ini_get('session.gc_maxlifetime');
         $return = $this->redis->expire($session_key_name, $session_timeout);
         $this->redis->delete($session_lock_key_name);
+        $this->isLocked = false;
         // MUST return bool. Return true for success.
         return $return;
     }
