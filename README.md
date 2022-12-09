@@ -27,10 +27,14 @@ You need PHP 7.4 or higher to run the code.
 
 ## Using the handlers
 
-You can use the Memcache handler by adding these two lines to your PHP code:
+This package is on [Packagist](https://packagist.org/packages/mintyphp/session-handlers) and can be installed using [Composer](https://getcomposer.org/download/), using:
 
-    ini_set('session.save_path', 'tcp://localhost:11211');
-    session_set_save_handler(new MemcacheSessionHandler(), true);
+    composer require mintyphp/session-handlers
+
+You can use the Redis handler by adding these two lines to your PHP code:
+
+    ini_set('session.save_path', 'tcp://localhost:6379');
+    session_set_save_handler(new RedisSessionHandler(), true);
 
 Note that these lines must be executed before the "session_start()" call.
 
