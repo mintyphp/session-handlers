@@ -9,7 +9,7 @@ This repository contains a set of PHP session save handlers that support locking
     Uses the "memcached" session module (ext-memcached).
   - **redisn** ([NativeRedisSessionHandler](src/NativeRedisSessionHandler.php))  
     Uses the "redis" session module (ext-redis).
-- **strict** (Protects against session fixation attacks)
+- **strict** ([docs](https://www.php.net/manual/en/session.configuration.php#ini.session.use-strict-mode))
   - **files** ([FilesSessionHandler](src/FilesSessionHandler.php))  
     Locks using ".lock" files instead of "flock" calls.
   - **memcached** ([MemcachedSessionHandler](src/MemcachedSessionHandler.php))  
