@@ -3,7 +3,7 @@ chdir(__DIR__);
 $handlers = [
     'default' => [],
     'files' => [],
-    'memcache' => ['memcache'],
+    'memcached' => ['memcached'],
     'redis' => ['redis'],
     'memcachedn' => ['memcached'],
     'redisn' => ['redis'],
@@ -28,10 +28,10 @@ if ($_SERVER['SERVER_PORT'] ?? 0) {
             include 'src/NativeRedisSessionHandler.php';
             $handler = new MintyPHP\NativeRedisSessionHandler();
             break;
-        case 'memcache':
-            ini_set('session.save_path', 'tcp://localhost:11211');
-            include 'src/MemcacheSessionHandler.php';
-            $handler = new MintyPHP\MemcacheSessionHandler();
+        case 'memcached':
+            ini_set('session.save_path', 'localhost:11211');
+            include 'src/MemcachedSessionHandler.php';
+            $handler = new MintyPHP\MemcachedSessionHandler();
             break;
         case 'memcachedn':
             ini_set('session.save_path', 'localhost:11211');

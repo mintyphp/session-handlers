@@ -4,13 +4,13 @@ namespace MintyPHP;
 
 use SessionHandlerInterface;
 use SessionIdInterface;
-use Memcache;
+use Memcached;
 
-class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterface
+class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInterface
 {
     private string $sessionName = '';
     private string $sessionId = '';
-    private $memcache = null;
+    private $memcached = null;
 
     /* Open session data database */
     public function open($save_path, $session_name): bool
@@ -19,11 +19,11 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         // string $session_name - Session ID cookie name. Default: session.name
 
         $url = parse_url($save_path);
-        $memcache = new Memcache();
-        $memcache->connect($url['host'], $url['port']);
+        $memcached = new Memcached();
+        $memcached->addServer($url['host'], $url['port']);
 
         $this->sessionName = $session_name;
-        $this->memcache = $memcache;
+        $this->memcached = $memcached;
 
         // MUST return bool. Return true for success.
         return true;
@@ -38,11 +38,12 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         $prefix = $this->sessionName;
         $id = $this->sessionId;
         $session_lock_key_name = "sess-$prefix-$id-lock";
-        $this->memcache->delete($session_lock_key_name);
+
+        $this->memcached->delete($session_lock_key_name);
         $this->sessionId = '';
 
         // MUST return bool. Return true for success.
-        return $this->memcache->close();
+        return $this->memcached->quit();
     }
 
     /* Read session data */
@@ -67,7 +68,7 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         $success = false;
         $max_time = ini_get("max_execution_time") ?: 30;
         for ($i = 0; $i < $max_time * 50; $i++) {
-            $success = $this->memcache->add($session_lock_key_name, '1', false, $max_time);
+            $success = $this->memcached->add($session_lock_key_name, '1', 0);
             if ($success) {
                 break;
             }
@@ -75,12 +76,13 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         }
         // return false if we could not aquire the lock
         if ($success === false) {
+            var_dump($success);
             return false;
         }
         // read MUST create file. Otherwise, strict mode will not work
         $session_timeout = ini_get('session.gc_maxlifetime');
-        $session_data = $this->memcache->get($session_key_name) ?: '';
-        $this->memcache->set($session_key_name, $session_data, false, $session_timeout);
+        $session_data = $this->memcached->get($session_key_name) ?: '';
+        $this->memcached->set($session_key_name, $session_data, $session_timeout);
 
         // MUST return STRING for successful read().
         // Return false only when there is error. i.e. Do not return false
@@ -101,14 +103,10 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
 
         $prefix = $this->sessionName;
         $session_key_name = "sess-$prefix-$id";
-        $session_lock_key_name = "sess-$prefix-$id-lock";
-        // We shouldn't write if we don't hold the lock.
-        if (!$this->memcache->get($session_lock_key_name)) {
-            return false;
-        }
+        //$session_lock_key_name = "sess-$prefix-$id-lock";
         $session_timeout = ini_get('session.gc_maxlifetime');
-        $return = $this->memcache->set($session_key_name, $session_data, false, $session_timeout);
-        $this->memcache->delete($session_lock_key_name);
+        $return = $this->memcached->set($session_key_name, $session_data, $session_timeout);
+        //$this->memcached->delete($session_lock_key_name);
         // MUST return bool. Return true for success.
         return $return;
     }
@@ -125,8 +123,8 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         $prefix = $this->sessionName;
         $session_key_name = "sess-$prefix-$id";
         $session_lock_key_name = "sess-$prefix-$id-lock";
-        $this->memcache->delete($session_key_name);
-        $this->memcache->delete($session_lock_key_name);
+        $this->memcached->delete($session_key_name);
+        $this->memcached->delete($session_lock_key_name);
         // MUST return bool. Return true for success.
         // Return false only when there is error. i.e. Do not return false
         // for non-existing session data for the $id.
@@ -154,7 +152,7 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         do {
             $id = bin2hex(random_bytes(16)); // 128 bit is recommended
             $session_key_name = "sess-$prefix-$id";
-        } while ($this->memcache->get($session_key_name));
+        } while ($this->memcached->get($session_key_name));
 
         // MUST return session ID string.
         // Return false for error.
@@ -170,7 +168,7 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
 
         $prefix = $this->sessionName;
         $session_key_name = "sess-$prefix-$id";
-        $ret = $this->memcache->get($session_key_name) ? true : false;
+        $ret = $this->memcached->get($session_key_name) ? true : false;
 
         // MUST return bool. Return true for collision.
         // NOTE: This handler is mandatory for session security.
@@ -178,5 +176,30 @@ class MemcacheSessionHandler implements SessionHandlerInterface, SessionIdInterf
         //       Check session ID collision, return true when it collides.
         //       Otherwise, return false.
         return $ret;
+    }
+
+    /* Update session data access time stamp WITHOUT writing $session_data */
+    public function updateTimestamp($id, $session_data): bool
+    {
+        if (!ctype_xdigit($id)) return false;
+        if (!$id || $this->sessionId != $id) return false;
+
+        // string $id - Session ID string
+        // string $session_data - Session data serialized by session serializer
+        // NOTE: This handler is optional. If your session database cannot
+        //       support time stamp updating, you must not define this.
+
+        $prefix = $this->sessionName;
+        $session_key_name = "sess-$prefix-$id";
+        $session_lock_key_name = "sess-$prefix-$id-lock";
+        // We shouldn't update the timestamp if we don't hold the lock.
+        if (!$this->memcached->get($session_lock_key_name)) {
+            return false;
+        }
+        $session_timeout = ini_get('session.gc_maxlifetime');
+        $return = $this->memcached->touch($session_key_name, $session_timeout);
+        $this->memcached->delete($session_lock_key_name);
+        // MUST return bool. Return true for success.
+        return $return;
     }
 }

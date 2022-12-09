@@ -113,15 +113,11 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
 
         $prefix = $this->sessionName;
         $session_key_name = "sess-$prefix-$id";
-        $session_lock_key_name = "sess-$prefix-$id-lock";
-        // We shouldn't write if we don't hold the lock.
-        if (!$this->redis->exists($session_lock_key_name)) {
-            return false;
-        }
+        //$session_lock_key_name = "sess-$prefix-$id-lock";
         $session_timeout = ini_get('session.gc_maxlifetime');
         $return = $this->redis->set($session_key_name, $session_data);
         $this->redis->expire($session_key_name, $session_timeout);
-        $this->redis->delete($session_lock_key_name);
+        //$this->redis->delete($session_lock_key_name);
         // MUST return bool. Return true for success.
         return $return;
     }

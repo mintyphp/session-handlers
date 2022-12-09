@@ -110,10 +110,6 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_save_path = $this->sessionSavePath;
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
-        // We shouldn't write if we don't hold the lock.
-        if (!file_exists($session_lock_file_name)) {
-            return false;
-        }
         $return = file_put_contents($session_file_name, $session_data, LOCK_EX);
         rmdir($session_lock_file_name);
         // MUST return bool. Return true for success.
