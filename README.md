@@ -21,7 +21,7 @@ You can install the dependencies of this script using:
 
 Optional dependencies can be installed using:
 
-    sudo apt install memcached php-memcache redis php-redis
+    sudo apt install memcached php-memcached redis php-redis
 
 You need PHP 7.4 or higher to run the code.
 
