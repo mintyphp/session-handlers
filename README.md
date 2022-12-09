@@ -2,9 +2,11 @@
 
 This repository contains a set of PHP session save handlers that support locking. I also contains a test suite to prove that they do. Current handlers are:
 
-- FilesSessionHandler.php - a session handler that locks using ".lock" files instead of "flock" calls.
-- MemcacheSessionHandler.php - a session handler that stores it's session data in Memcache.
-- RedisSessionHandler.php - a session handler that stores it's session data in Redis.
+- files: [FilesSessionHandler](src/FilesSessionHandler.php) - locks using ".lock" files instead of "flock" calls.
+- memcached: [MemcachedSessionHandler](src/MemcachedSessionHandler.php) - locks using Memcache's atomic "add" operation.
+- redis: [RedisSessionHandler](src/RedisSessionHandler.php) - locks using Redis' atomic "setNx" operation.
+- memcachedn: [NativeMemcachedSessionHandler](src/NativeMemcachedSessionHandler.php) - uses the "memcached" session module (ext-memcached).
+- redisn: [NativeRedisSessionHandler](src/NativeRedisSessionHandler.php) - uses the "redis" session module (ext-redis).
 
 ## Requirements
 
