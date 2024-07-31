@@ -216,7 +216,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         }
         $session_timeout = ini_get('session.gc_maxlifetime');
         $return = $this->redis->expire($session_key_name, $session_timeout);
-        $this->redis->delete($session_lock_key_name);
+        $this->redis->del($session_lock_key_name);
         $this->isLocked = false;
         // MUST return bool. Return true for success.
         return $return;
