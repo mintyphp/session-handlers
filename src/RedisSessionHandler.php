@@ -20,12 +20,6 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         // string $save_path - Directory path, connection strings, etc. Default: session.save_path
         // string $session_name - Session ID cookie name. Default: session.name
 
-        // Workaround to work with envvar fallback https://php.watch/versions/8.3/php-ini-envar-fallback-value-syntax
-        $parsed = parse_ini_string('save_path = "' . $save_path . '"');
-        if (is_array($parsed)) {
-            $save_path = $parsed['save_path'];
-        }
-
         $url = parse_url($save_path);
         $redis = new Redis();
         $redis->connect($url['host'], $url['port']);
