@@ -48,7 +48,7 @@ class LoggingSessionHandler implements SessionHandlerInterface, SessionIdInterfa
         return $this->__call('destroy', func_get_args());
     }
 
-    public function gc($maxlifetime): bool
+    public function gc($maxlifetime): int|false
     {
         return $this->__call('gc', func_get_args());
     }

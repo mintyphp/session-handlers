@@ -50,7 +50,7 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
     }
 
     /* Read session data */
-    public function read($id): string|bool
+    public function read($id): string|false
     {
         if (!ctype_xdigit($id)) return '';
 
@@ -144,7 +144,7 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
     }
 
     /* Create new secure session ID */
-    public function create_sid(): string|bool
+    public function create_sid(): string
     {
         // void parameter
         // NOTE: Defining create_sid() is mandatory because validate_sid() is mandatory for
