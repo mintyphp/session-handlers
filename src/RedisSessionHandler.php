@@ -50,7 +50,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
     }
 
     /* Read session data */
-    public function read($id): string
+    public function read($id): string|bool
     {
         if (!ctype_xdigit($id)) return '';
 
@@ -157,7 +157,7 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
     }
 
     /* Create new secure session ID */
-    public function create_sid(): string
+    public function create_sid(): string|bool
     {
         // void parameter
         // NOTE: Defining create_sid() is mandatory because validate_sid() is mandatory for
