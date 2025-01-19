@@ -84,9 +84,9 @@ class NativeRedisSessionHandler extends \SessionHandler
         //redis.session.lock_retries = 300
         //
 
-        $lock_expire = (ini_get("redis.session.lock_expire") ?: ini_get("max_execution_time")) ?: 30; // 30s
+        $lock_expire = (ini_get("redis.session.lock_expire") ?: (ini_get("max_execution_time") * 10)) ?: 300; // 300s
         $lock_wait_time = (ini_get("redis.session.lock_wait_time") ?: 20000); // 20ms
-        $lock_retries = (int) ($lock_expire / ($lock_wait_time / 1000000)); // 1500x
+        $lock_retries = (int) ($lock_expire / ($lock_wait_time / 1000000)); // 15000x
 
         ini_set('redis.session.locking_enabled', 1);
         ini_set('redis.session.lock_expire', $lock_expire);
