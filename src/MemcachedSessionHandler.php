@@ -67,9 +67,9 @@ class MemcachedSessionHandler implements SessionHandlerInterface, SessionIdInter
         $session_key_name = "sess-$prefix-$id";
         $session_lock_key_name = "sess-$prefix-$id-lock";
 
-        // Try to aquire lock for 30 seconds (max execution time).
+        // Try to aquire lock for 300 seconds (max execution time x 10).
         $success = false;
-        $max_time = ini_get("max_execution_time") ?: 30;
+        $max_time = (ini_get("max_execution_time") ?: 30) * 10;
         for ($i = 0; $i < $max_time * 50; $i++) {
             $success = $this->memcached->add($session_lock_key_name, '1', 0);
             if ($success) {
