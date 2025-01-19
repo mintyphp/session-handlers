@@ -77,9 +77,9 @@ class RedisSessionHandler implements SessionHandlerInterface, SessionIdInterface
         //; Maximum number of times to retry (-1 means infinite). Defaults to: 100
         //redis.session.lock_retries = 300
 
-        // Try to aquire lock for 30 seconds (max execution time).
+        // Try to aquire lock for 300 seconds (max execution time x 10).
         $success = false;
-        $max_time = ini_get("max_execution_time") ?: 30;
+        $max_time = (ini_get("max_execution_time") ?: 30) * 10;
         for ($i = 0; $i < $max_time * 50; $i++) {
             $success = $this->redis->setNx($session_lock_key_name, '1');
             if ($success) {
