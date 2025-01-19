@@ -74,9 +74,9 @@ class FilesSessionHandler implements SessionHandlerInterface, SessionIdInterface
         $session_file_name = "$session_save_path/sess_$id";
         $session_lock_file_name = "$session_save_path/sess_$id.lock";
 
-        // Try to aquire lock for 30 seconds (max execution time).
+        // Try to aquire lock for 300 seconds (max execution time x 10).
         $handle = false;
-        $max_time = ini_get("max_execution_time") ?: 30;
+        $max_time = (ini_get("max_execution_time") ?: 30) * 10;
         for ($i = 0; $i < $max_time * 50; $i++) {
             $handle = @fopen($session_lock_file_name, 'x');
             if ($handle !== false) {
